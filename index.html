@@ -274,19 +274,23 @@
         let provider, signer, contract, account;
         const statusEl = document.getElementById("status");
 
-        // Typewriter effect for status
-        function typeWriter(text, speed = 40) {
-            statusEl.innerHTML = "";
-            let i = 0;
-            const interval = setInterval(() => {
-                if (i < text.length) {
-                    statusEl.innerHTML += text.charAt(i);
-                    i++;
-                } else {
-                    clearInterval(interval);
-                }
-            }, speed);
+function typeWriter(text, speed = 40) {
+    // Temporarily remove the heavy shadow to prevent rendering glitches
+    statusEl.style.textShadow = "none";
+    statusEl.innerHTML = "";
+    
+    let i = 0;
+    const interval = setInterval(() => {
+        if (i < text.length) {
+            statusEl.innerHTML += text.charAt(i);
+            i++;
+        } else {
+            clearInterval(interval);
+            // Restore the original glow once typing is done
+            statusEl.style.textShadow = "0 0 20px var(--gold)";
         }
+    }, speed);
+}
 
         async function connectWallet() {
             if (!window.ethereum) {
