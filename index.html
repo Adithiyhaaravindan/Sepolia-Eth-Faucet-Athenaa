@@ -140,6 +140,8 @@
             margin-top: 30px;
             text-shadow: 0 0 20px var(--gold);
             white-space: pre-wrap;
+            opacity: 0;
+            transition: opacity 0.5s ease;
         }
         .scanline {
             position: absolute;
@@ -255,42 +257,63 @@
         initParticles();
         animateParticles();
 
-        // Simple candlesticks (unchanged)
+        // Simple candlesticks
         const candleCanvas = document.getElementById('candles');
         const cctx = candleCanvas.getContext('2d');
         candleCanvas.width = window.innerWidth;
         candleCanvas.height = window.innerHeight;
         let candles = [];
-        class Candle { constructor() { this.x = Math.random()*candleCanvas.width; this.y = Math.random()*candleCanvas.height; this.height = Math.random()*50+20; this.width = 8; this.color = Math.random()>0.5?'#00ff88':'#ff3366'; this.alpha = 0.08+Math.random()*0.15; } draw() { cctx.fillStyle=this.color; cctx.globalAlpha=this.alpha; cctx.fillRect(this.x-this.width/2, this.y-this.height, this.width, this.height); cctx.fillRect(this.x-1, this.y-this.height-8, 2, this.height+16); } }
+        class Candle { 
+            constructor() { 
+                this.x = Math.random()*candleCanvas.width; 
+                this.y = Math.random()*candleCanvas.height; 
+                this.height = Math.random()*50+20; 
+                this.width = 8; 
+                this.color = Math.random()>0.5?'#00ff88':'#ff3366'; 
+                this.alpha = 0.08+Math.random()*0.15; 
+            } 
+            draw() { 
+                cctx.fillStyle=this.color; 
+                cctx.globalAlpha=this.alpha; 
+                cctx.fillRect(this.x-this.width/2, this.y-this.height, this.width, this.height); 
+                cctx.fillRect(this.x-1, this.y-this.height-8, 2, this.height+16); 
+            } 
+        }
         for (let i = 0; i < 18; i++) candles.push(new Candle());
-        function drawCandles() { cctx.clearRect(0,0,candleCanvas.width,candleCanvas.height); candles.forEach(c=>c.draw()); }
+        function drawCandles() { 
+            cctx.clearRect(0,0,candleCanvas.width,candleCanvas.height); 
+            candles.forEach(c=>c.draw()); 
+        }
         setInterval(drawCandles, 4000);
 
         // Faucet logic
-        const contractAddress = "0x625c58A939DA45871ac0C0f536051157bEFdb336"; // ← REPLACE THIS
+        const contractAddress = "0x625c58A939DA45871ac0C0f536051157bEFdb336";
         const sepoliaChainId = "0xaa36a7";
         const abi = ["function request() external"];
 
         let provider, signer, contract, account;
         const statusEl = document.getElementById("status");
 
-function typeWriter(text, speed = 40) {
-    // Temporarily remove the heavy shadow to prevent rendering glitches
-    statusEl.style.textShadow = "none";
-    statusEl.innerHTML = "";
-    
-    let i = 0;
-    const interval = setInterval(() => {
-        if (i < text.length) {
-            statusEl.innerHTML += text.charAt(i);
-            i++;
-        } else {
-            clearInterval(interval);
-            // Restore the original glow once typing is done
-            statusEl.style.textShadow = "0 0 20px var(--gold)";
+        // Fixed typewriter effect – no more glitches
+        function typeWriter(text, speed = 40) {
+            // Start with invisible status
+            statusEl.style.opacity = "0";
+            statusEl.style.textShadow = "none";  // Disable heavy shadow during typing
+            statusEl.innerHTML = "";
+
+            let i = 0;
+            const interval = setInterval(() => {
+                if (i < text.length) {
+                    statusEl.innerHTML += text.charAt(i);
+                    i++;
+                } else {
+                    clearInterval(interval);
+                    // Restore full glow and fade in
+                    statusEl.style.textShadow = "0 0 20px var(--gold)";
+                    statusEl.style.opacity = "1";
+                }
+            }, speed);
         }
-    }, speed);
-}
 
         async function connectWallet() {
             if (!window.ethereum) {
@@ -303,7 +326,10 @@ function typeWriter(text, speed = 40) {
                 await provider.send("eth_requestAccounts", []);
                 const network = await provider.getNetwork();
                 if (network.chainId !== parseInt(sepoliaChainId, 16)) {
-                    await window.ethereum.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: sepoliaChainId }] });
+                    await window.ethereum.request({ 
+                        method: 'wallet_switchEthereumChain', 
+                        params: [{ chainId: sepoliaChainId }] 
+                    });
                 }
                 signer = provider.getSigner();
                 account = await signer.getAddress();
